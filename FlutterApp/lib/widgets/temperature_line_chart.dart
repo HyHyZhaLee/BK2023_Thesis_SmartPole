@@ -30,12 +30,14 @@ class LineChartWidget extends StatefulWidget {
 
 class _LineChartWidgetState extends State<LineChartWidget> {
   List<FlSpot> _spots = [];
+  double? _minValue;
+  double? _maxValue;
 
   @override
   void initState() {
     super.initState();
     global_databaseReference
-        .child(widget.deviceId)
+        .child(widget.deviceId != "NEMA_0002" ? "NEMA_0002" : "NEMA_0002")
         .child(widget.stationId)
         .child(widget.sensorType)
         .child(widget.date)
@@ -45,12 +47,18 @@ class _LineChartWidgetState extends State<LineChartWidget> {
       if (event.snapshot.value != null) {
         final dataMap = Map<String, double>.from(event.snapshot.value as Map);
         List<FlSpot> spots = [];
+        double minValue = dataMap.entries.first.value;
+        double maxValue = dataMap.entries.first.value;
         dataMap.forEach((key, value) {
+          minValue = minValue > value ? value : minValue;
+          maxValue = maxValue < value ? value : maxValue;
           // Convert time string (HH:mm:ss) to minutes since midnight
           spots.add(FlSpot(_convertTimeToFloat(key), value));
         });
         setState(() {
           _spots = spots; // Ensure the spots are ordered by time
+          _minValue = minValue - 5.0;
+          _maxValue = maxValue + 5.0;
         });
       }
     });
@@ -64,28 +72,6 @@ class _LineChartWidgetState extends State<LineChartWidget> {
     return hours * 60.0 +
         minutes +
         seconds / 60.0; // Convert time to total minutes
-  }
-
-  double? takeMinY() {
-    if (widget.sensorType == "temperature") {
-      return 27;
-    } else if (widget.sensorType == "hunidity") {
-      return 40;
-    } else if (widget.sensorType == "ambient_light") {
-      return 0;
-    }
-    return null;
-  }
-
-  double? takeMaxY() {
-    if (widget.sensorType == "temperature") {
-      return 32;
-    } else if (widget.sensorType == "hunidity") {
-      return 70;
-    } else if (widget.sensorType == "ambient_light") {
-      return 2000;
-    }
-    return null;
   }
 
   Color? getColor() {
@@ -109,8 +95,8 @@ class _LineChartWidgetState extends State<LineChartWidget> {
           padding: EdgeInsets.symmetric(vertical: 12, horizontal: 12),
           child: LineChart(
             LineChartData(
-              minY: takeMinY(),
-              maxY: takeMaxY(),
+              minY: _minValue,
+              maxY: _maxValue,
               lineTouchData: LineTouchData(
                 touchTooltipData:
                     LineTouchTooltipData(getTooltipItems: (touchedSpots) {
@@ -194,7 +180,7 @@ class _LineChartWidgetState extends State<LineChartWidget> {
               lineBarsData: [
                 LineChartBarData(
                   spots: _spots,
-                  isCurved: true,
+                  isCurved: false,
                   color: getColor(), // Line color
                   barWidth: 5,
                   isStrokeCapRound: true,

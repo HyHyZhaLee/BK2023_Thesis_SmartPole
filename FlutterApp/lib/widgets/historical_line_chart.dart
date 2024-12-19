@@ -9,8 +9,6 @@ class HistoricalLineChartWidget extends StatefulWidget {
   final String stationId;
   final String sensorType;
   final String unitData;
-  final double minY;
-  final double maxY;
   final Color color;
   final String date;
 
@@ -20,13 +18,9 @@ class HistoricalLineChartWidget extends StatefulWidget {
     required this.stationId,
     required this.sensorType,
     required this.unitData,
-    double? minY,
-    double? maxY,
     Color? color,
     String? date,
-  })  : minY = minY ?? 0.0,
-        maxY = maxY ?? 100.0, // Correct default assignment
-        color = color ?? Colors.redAccent, // Correct default assignment
+  })  : color = color ?? Colors.redAccent, // Correct default assignment
         date = date ?? DateFormat('yyyy-MM-dd').format(DateTime.now()),
         super(key: key);
 
@@ -37,12 +31,15 @@ class HistoricalLineChartWidget extends StatefulWidget {
 
 class _HistoricalLineChartWidgetState extends State<HistoricalLineChartWidget> {
   List<FlSpot> _spots = [];
+  double? _minValue;
+  double? _maxValue;
 
   @override
   void initState() {
     super.initState();
+
     global_databaseReference
-        .child(widget.deviceId)
+        .child(widget.deviceId != "NEMA_0002" ? "NEMA_0002" : "NEMA_0002")
         .child(widget.stationId)
         .child(widget.sensorType)
         .child(widget.date)
@@ -52,12 +49,18 @@ class _HistoricalLineChartWidgetState extends State<HistoricalLineChartWidget> {
       if (event.snapshot.value != null) {
         final dataMap = Map<String, double>.from(event.snapshot.value as Map);
         List<FlSpot> spots = [];
+        double minValue = dataMap.entries.first.value;
+        double maxValue = dataMap.entries.first.value;
         dataMap.forEach((key, value) {
+          minValue = minValue > value ? value : minValue;
+          maxValue = maxValue < value ? value : maxValue;
           // Convert time string (HH:mm:ss) to minutes since midnight
           spots.add(FlSpot(_convertTimeToFloat(key), value));
         });
         setState(() {
           _spots = spots; // Ensure the spots are ordered by time
+          _minValue = minValue - 5.0;
+          _maxValue = maxValue + 5.0;
         });
       }
     });
@@ -84,8 +87,8 @@ class _HistoricalLineChartWidgetState extends State<HistoricalLineChartWidget> {
           padding: EdgeInsets.symmetric(vertical: 32, horizontal: 32),
           child: LineChart(
             LineChartData(
-              minY: widget.minY,
-              maxY: widget.maxY,
+              minY: _minValue,
+              maxY: _maxValue,
               lineTouchData: LineTouchData(
                 touchTooltipData:
                     LineTouchTooltipData(getTooltipItems: (touchedSpots) {
@@ -169,7 +172,7 @@ class _HistoricalLineChartWidgetState extends State<HistoricalLineChartWidget> {
               lineBarsData: [
                 LineChartBarData(
                   spots: _spots,
-                  isCurved: true,
+                  isCurved: false,
                   color: widget.color, // Line color
                   barWidth: 5,
                   isStrokeCapRound: true,

@@ -1,0 +1,72 @@
+{
+   "checksum": "69ba45891b809b978568d8c7a84421f7",
+   "roots": {
+      "bookmark_bar": {
+         "children": [ {
+            "children": [ {
+               "date_added": "13239587310072369",
+               "date_last_used": "0",
+               "guid": "328e406e-3e51-45c8-a9d0-2eb24804a46d",
+               "id": "7",
+               "name": "ASUS Homepage",
+               "show_icon": false,
+               "source": "sync",
+               "type": "url",
+               "url": "http://www.asus.com/",
+               "visit_count": 0
+            }, {
+               "date_added": "13239587310072369",
+               "date_last_used": "0",
+               "guid": "4a71fd66-525f-446d-9ea8-ec9de684e8cc",
+               "id": "8",
+               "name": "ASUS Member",
+               "show_icon": false,
+               "source": "sync",
+               "type": "url",
+               "url": "https://account.asus.com/",
+               "visit_count": 0
+            } ],
+            "date_added": "13378725604782984",
+            "date_last_used": "0",
+            "date_modified": "13378725604782984",
+            "guid": "6c00a978-63f7-4163-8cab-0e907d839b4d",
+            "id": "6",
+            "name": "ASUS E-Service",
+            "source": "unknown",
+            "type": "folder"
+         } ],
+         "date_added": "13378725737616057",
+         "date_last_used": "0",
+         "date_modified": "0",
+         "guid": "0bc5d13f-2cba-5d74-951f-3f233fe6c908",
+         "id": "1",
+         "name": "Favorites bar",
+         "source": "unknown",
+         "type": "folder"
+      },
+      "other": {
+         "children": [  ],
+         "date_added": "13378725737616061",
+         "date_last_used": "0",
+         "date_modified": "0",
+         "guid": "82b081ec-3dd3-529c-8475-ab6c344590dd",
+         "id": "2",
+         "name": "Other favorites",
+         "source": "unknown",
+         "type": "folder"
+      },
+      "synced": {
+         "children": [  ],
+         "date_added": "13378725737616063",
+         "date_last_used": "0",
+         "date_modified": "0",
+         "guid": "4cf2e351-0e85-532b-bb37-df045d8f8d0f",
+         "id": "3",
+         "name": "Mobile favorites",
+         "source": "unknown",
+         "type": "folder"
+      }
+   },
+   "sync_metadata": "CpsBCh4IiIECEggVwXnJkwEAACoOEAAYASAAKAQwADgAQAASABpYSWx4YkVvU0lYTGgzaE5Wbk9DZDU3eHg1TzlKVUVqZXhSUG1NQTIrRFRvdXNVRU9zRmovdVd6UG9obWQyMlZnSU5jRkhJUzBWTGI3K0ZlcGxGSTdseWc9PSoYWkhuTzk3c1RQbmRjMGd3WUpiemZ4Zz09SAOgBgwSrQEICBKoAQocbXNyWGRLYVN0amRtc3RlaTlaU2NjaXBPVTJrPRIkNGE3MWZkNjYtNTI1Zi00NDZkLTllYTgtZWM5ZGU2ODRlOGNjGAAgACgAMLmd5su8MjjipubLvDJA4qbmy7wyShxic0YwZDVyRHlITUhWOFRLS1lwNVNraWJyYkU9Wh8iHbxIdjRyS1JTeG5Kai9keFRLengySWxZQVZmc3M9ZQAAAADCPgJgBRKOAQgDEokBChxuamdEdTg4ZUNydlhwODZwRDdmSEdjcUZwODg9EiQ2MzNkY2JlNi01NWE1LTUyOTAtODI2Yy0zN2FkMWE4ZmUzZTcYACAAKAAwo4Lmy7wyOOKI5su8MkDiiObLvDJKHHl6TkIwMWNuNTRBN2NSVTB1VCsvUGdtVHRVbz1aAGUAAAAAwj4CYAASjgEIARKJAQoceXhKLzZmdmtlY3I3a3A1RVF6QjR0V0xwZGJFPRIkMDlkYTcxNDAtMTYzOC01NTBjLTgwYTEtMDEzNGY4N2RmOWQyGAAgACgAMJ2C5su8Mjjvh+bLvDJA74fmy7wyShxhUkNXTGdoRjliNUlucUtJRHZ1Si9qdlFrRmM9WgBlAAAAAMI+AmAAEqwBCAcSpwEKHHAvVXpyWGYvNGhvS2UyVUt4ZVhZUHpSck54cz0SJDMyOGU0MDZlLTNlNTEtNDVjOC1hOWQwLTJlYjI0ODA0YTQ2ZBgAIAAoADC4nebLvDI4uqbmy7wyQLqm5su8MkocUm5QT0hqelJNbUxLektwVlhWeGZxZWl1VVI0PVoeIhx5YTNaS1RCWW5LQUFqb3hnQ0tsbjgrc251QVE9ZQAAAADCPgJgBRKsAQgGEqcBChxKVkdHdmVGckdWSTdNN0NvSTNrTjhvWjRFcnc9EiQ2YzAwYTk3OC02M2Y3LTQxNjMtOGNhYi0wZTkwN2Q4MzliNGQYACAAKAAwt53my7wyOJSm5su8MkCUpubLvDJKHHJyZkt0eUdkWGdFbkRkUG93NUhMajN4VkpVQT1aHiIcRTE4WTEyZW1GemJwR3Ftd2J4UkJDdGVwdi9VPWUAAAAAwj4CYAASjgEIAhKJAQocWWNTVG9udkVTUHdxQ3M0TDJjclZodjY4TDk4PRIkZmRkMTljOWUtM2QxMC01MTEwLTk4YzMtMDIyMmMzODYxMDZhGAAgACgAMJ6C5su8MjiaiObLvDJAmojmy7wyShxvUFZraHdCUmJWNjVLQ1dSMitJT05IV29PdTg9WgBlAAAAAMI+AmAAMAA4AA==",
+   "version": 1
+}

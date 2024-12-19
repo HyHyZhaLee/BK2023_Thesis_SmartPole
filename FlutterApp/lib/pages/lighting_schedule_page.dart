@@ -1,15 +1,11 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
 import 'package:flutter_app/widgets/add_event_dialog.dart';
-import 'dart:convert';
-import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_app/widgets/event_details_dialog.dart';
 import 'package:flutter_app/utils/custom_route.dart';
 import 'package:flutter_app/provider/event_provider.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter_app/widgets/app_bar_custom.dart';
 import 'package:flutter_app/model/appointment_extension.dart';
 
 class LightingSchedulePage extends StatefulWidget {

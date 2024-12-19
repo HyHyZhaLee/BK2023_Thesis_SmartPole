@@ -1,6 +1,7 @@
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // Để sử dụng SystemSound
+import 'package:flutter_app/provider/pole_provider.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart'; // Để sử dụng Provider
 import 'dart:convert'; // Để encode dữ liệu JSON
@@ -9,8 +10,10 @@ import '../AppFunction/global_helper_function.dart'; // Để dùng getCurrentTi
 import '../widgets/dropdown_button_widget.dart';
 import '../provider/page_controller_provider.dart';
 import 'package:flutter_svg/flutter_svg.dart'; // Để sử dụng SVG
+import 'package:flutter_app/model/pole.dart';
 // import 'package:flutter_app/widgets/line_chart_temp_homepage.dart';
 import 'package:flutter_app/widgets/temperature_line_chart.dart';
+import '../AppFunction/mqtt_manager.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -20,11 +23,6 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  double _currentSliderValue = 0; // Giá trị ban đầu của slider
-  bool _isSwitched = false; // Trạng thái cho switch bên phải
-  String _deviceID = "NEMA_0002"; // ID của thiết bị
-  String _stationID = "AIR_0002";
-
   String _humidityValue = '80'; // Thông tin độ ẩm
   String _temperatureValue = '20'; // Thông tin nhiệt độ
   String _pm10 = '100'; // Thông tin hạt bụi mịn bán kính 10
@@ -37,10 +35,15 @@ class _HomePageState extends State<HomePage> {
   String _unitDataShow = "℃";
 
   String today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+
+  late MqttManager mqttManager;
+
   @override
   void initState() {
-    super.initState();
-    _loadInitialBrightness(); // Load dữ liệu ban đầu từ Firebase
+    super.initState(); // Example method to load initial brightness data
+    // Defer MQTT initialization until after the first frame
+    // MqttManager(); // Now it's safe to use context
+
     listenForLastestDataAirSensor("temperature", "°C");
     listenForLastestDataAirSensor("humidity", "%");
     listenForLastestDataAirSensor("PM10", "μg/m³");
@@ -50,53 +53,58 @@ class _HomePageState extends State<HomePage> {
     listenForLastestDataAirSensor("noise", "dB");
   }
 
-  Future<void> _loadInitialBrightness() async {
-    try {
-      DatabaseEvent event = await global_databaseReference
-          .child(_deviceID)
-          .child("Newest data")
-          .once();
+  // Future<void> _loadInitialBrightness() async {
+  //   final provider = Provider.of<PoleProvider>(context, listen: false);
+  //   String deviceID = provider.getSelectedPoleID();
 
-      if (event.snapshot.value != null && event.snapshot.value is Map) {
-        final data = event.snapshot.value as Map<dynamic, dynamic>;
-        setState(() {
-          _currentSliderValue = (data['brightness'] ?? 0).toDouble();
-        });
-        print('Initial brightness for $_deviceID: $_currentSliderValue');
-      }
-    } catch (e) {
-      print('Failed to load initial brightness: $e');
-    }
-  }
+  //   try {
+  //     DatabaseEvent event = await global_databaseReference
+  //         .child(deviceID)
+  //         .child("Newest data")
+  //         .once();
 
-  void _publishBrightness(double value, String deviceID) {
-    setState(() {
-      _currentSliderValue = value;
-    });
+  //     if (event.snapshot.value != null && event.snapshot.value is Map) {
+  //       final data = event.snapshot.value as Map<dynamic, dynamic>;
+  //       provider.setSelectedDimming((data['brightness'] ?? 0).toDouble());
+  //       print(
+  //           'Initial brightness for $deviceID: ${provider.getSelectedDiming().toString()}');
+  //     }
+  //   } catch (e) {
+  //     print('Failed to load initial brightness: $e');
+  //   }
+  // }
 
-    var message = jsonEncode({
-      "station_id": "SmartPole_0002",
-      "station_name": "Smart Pole 0002",
-      "timestamp": getCurrentTimestamp(),
-      "action": "control light",
-      "device_id": deviceID,
-      "data": value.round().toString()
-    });
+  // void _publishBrightness(double value, String deviceID) {
+  //   final provider = Provider.of<PoleProvider>(context, listen: false);
+  //   provider.setSelectedDimming(value);
 
-    // Gửi dữ liệu qua MQTT
-    global_mqttHelper.publish(MQTT_TOPIC, message);
+  //   var message = jsonEncode({
+  //     "station_id": "SmartPole_0002",
+  //     "station_name": "Smart Pole 0002",
+  //     "timestamp": getCurrentTimestamp(),
+  //     "action": "control light",
+  //     "device_id": deviceID,
+  //     "data": value.round().toString()
+  //   });
 
-    // Cập nhật dữ liệu lên Firebase
-    global_databaseReference.child(deviceID).child("Newest data").set({
-      "brightness": value.round(),
-      "timestamp": getCurrentTimestamp(),
-    });
-  }
+  //   // Gửi dữ liệu qua MQTT
+  //   global_mqttHelper.publish(MQTT_TOPIC, message);
+
+  //   // Cập nhật dữ liệu lên Firebase
+  //   global_databaseReference.child(deviceID).child("Newest data").set({
+  //     "brightness": value.round(),
+  //     "timestamp": getCurrentTimestamp(),
+  //   });
+  // }
 
   void listenForLastestDataAirSensor(String dataName, String dataUnit) {
+    final provider = Provider.of<PoleProvider>(context, listen: false);
+    String deviceID = provider.getSelectedPoleID();
+    String stationID = provider.getSelectedStationID();
+
     global_databaseReference
-        .child(_deviceID)
-        .child(_stationID)
+        .child(deviceID)
+        .child(stationID)
         .child(dataName)
         .child(today)
         .orderByKey()
@@ -120,7 +128,7 @@ class _HomePageState extends State<HomePage> {
           } else if (dataName == 'air_pressure') {
             _airPressure = "$latestValue $dataUnit";
           } else if (dataName == 'ambient_light') {
-            _ambientLight = "$latestValue $dataUnit";
+            _ambientLight = "$latestValue";
           } else if (dataName == 'noise') {
             _noise = "$latestValue $dataUnit";
           } else {
@@ -198,18 +206,22 @@ class _HomePageState extends State<HomePage> {
                                           const RoundSliderOverlayShape(
                                               overlayRadius: 60),
                                     ),
-                                    child: Slider(
-                                      value: _currentSliderValue,
-                                      min: 0,
-                                      max: 100,
-                                      onChanged: (value) {
-                                        setState(() {
-                                          _currentSliderValue = value;
-                                          _isSwitched = _currentSliderValue > 0;
-                                        });
-                                      },
-                                      onChangeEnd: (value) {
-                                        _publishBrightness(value, _deviceID);
+                                    child: Consumer<PoleProvider>(
+                                      builder: (context, polesList, child) {
+                                        return Slider(
+                                          value: polesList.getSelectedDiming(),
+                                          min: 0,
+                                          max: 100,
+                                          onChanged: (value) {
+                                            polesList.setSelectedDimming(value);
+                                          },
+                                          onChangeEnd: (value) {
+                                            polesList.setSelectedDimming(value);
+                                            // Need a MQTT send function
+                                            polesList.publishColtrolSignal();
+                                            // ====================================
+                                          },
+                                        );
                                       },
                                     ),
                                   ),
@@ -219,7 +231,7 @@ class _HomePageState extends State<HomePage> {
                               Positioned(
                                 top: 0,
                                 left: 70,
-                                child: _buildButton("NEMA - 01", context),
+                                child: _buildChoosingPoleDropdownButton(),
                               ),
                               Positioned(
                                 top: 0,
@@ -237,7 +249,7 @@ class _HomePageState extends State<HomePage> {
                                 top: 130,
                                 right: 110,
                                 child: _buildButton("AIR SENSOR", context,
-                                    pageIndex: 6),
+                                    pageIndex: 7),
                               ),
                               Positioned(
                                 top: 335,
@@ -322,14 +334,21 @@ class _HomePageState extends State<HomePage> {
                                       borderRadius: BorderRadius.circular(28),
                                       color: Color(0xFF3ACBE9),
                                     ),
-                                    child: buildSwitchPoleWidget(
-                                      isOn: _isSwitched, // Initial state
-                                      onToggle: (bool value) {
-                                        // Handle the toggle logic here
-                                        setState(() {
-                                          _isSwitched = value;
-                                        });
-                                        print("Streetlight toggled: $value");
+                                    child: Consumer<PoleProvider>(
+                                      builder: (context, polesList, child) {
+                                        return buildSwitchPoleWidget(
+                                          isOn: polesList
+                                              .getSelectedIsSwitch(), // Initial state
+                                          onToggle: (bool value) {
+                                            // Handle the toggle logic here
+                                            polesList.setSelectedSwitch(value);
+                                            // Need a public to server MQTT
+                                            polesList.publishColtrolSignal();
+                                            // ==========================
+                                            print(
+                                                "Streetlight toggled: $value");
+                                          },
+                                        );
                                       },
                                     ),
                                   ),
@@ -513,13 +532,17 @@ class _HomePageState extends State<HomePage> {
                               borderRadius: BorderRadius.circular(16),
                               color: Color(0xFFFFFFFF),
                             ),
-                            child: LineChartWidget(
-                              key: ValueKey(_selectedHistoryShow),
-                              deviceId: _deviceID,
-                              stationId: _stationID,
-                              sensorType: _selectedHistoryShow,
-                              unitData: _unitDataShow,
-                              color: Colors.redAccent,
+                            child: Consumer<PoleProvider>(
+                              builder: (context, polesList, child) {
+                                return LineChartWidget(
+                                  key: ValueKey(_selectedHistoryShow),
+                                  deviceId: polesList.getSelectedPoleID(),
+                                  stationId: polesList.getSelectedStationID(),
+                                  sensorType: _selectedHistoryShow,
+                                  unitData: _unitDataShow,
+                                  color: Colors.redAccent,
+                                ); // LineChart
+                              },
                             ),
                           ),
                         ),
@@ -678,7 +701,6 @@ class _HomePageState extends State<HomePage> {
                 ],
               ), // Column
             ), // Sized Box
-
             Text(
               '$value',
               style: TextStyle(
@@ -731,37 +753,85 @@ class _HomePageState extends State<HomePage> {
         _unitDataShow = "%";
       } else if (newSelection == "Luminous") {
         _selectedHistoryShow = "ambient_light";
-        _unitDataShow = "Lux";
+        _unitDataShow = "";
       }
     });
   }
 
+  Widget _buildChoosingPoleDropdownButton() {
+    return Consumer<PoleProvider>(
+      builder: (context, polesInfor, child) {
+        return Container(
+          width: 150,
+          height: 53,
+          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: Color(0xFFEDEEF4),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: DropdownButton<PoleInfor>(
+            value: polesInfor.getSelectedPole(),
+            icon: const Icon(Icons.arrow_drop_down),
+            elevation: 16,
+            style: const TextStyle(color: Colors.deepPurple),
+            underline: const SizedBox(),
+            isExpanded: true,
+            items: polesInfor
+                .getPoles()
+                .map<DropdownMenuItem<PoleInfor>>((PoleInfor pole) {
+              return DropdownMenuItem<PoleInfor>(
+                value: pole,
+                child: Text(
+                  pole.poleName,
+                  style: TextStyle(
+                    color: PRIMARY_BLACK_COLOR,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              );
+            }).toList(),
+            onChanged: (PoleInfor? newValue) {
+              polesInfor.setSelectedPole(newValue!);
+            },
+          ),
+        );
+      },
+    );
+  }
+
   // Nút bấm
   Widget _buildButton(String label, BuildContext context, {int pageIndex = 1}) {
-    return SizedBox(
-      width: 201,
-      height: 53,
-      child: ElevatedButton(
-        onPressed: () {
-          context.read<PageControllerProvider>().setSelectedIndex(pageIndex);
-          print('$label button pressed');
-        },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFFD9D9D9),
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(0),
+    return Consumer<PageControllerProvider>(
+      builder: (context, pageControllerProvider, child) {
+        return SizedBox(
+          width: 201,
+          height: 53,
+          child: ElevatedButton(
+            onPressed: () {
+              pageControllerProvider.setIndex(pageIndex);
+              pageControllerProvider.pages
+                  .elementAt(pageControllerProvider.selectedIndex);
+              print('$label button pressed');
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFD9D9D9),
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(0),
+              ),
+            ),
+            child: Text(
+              label,
+              style: TextStyle(
+                color: PRIMARY_BLACK_COLOR,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: PRIMARY_BLACK_COLOR,
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
+        );
+      },
     );
   } // build
 }
